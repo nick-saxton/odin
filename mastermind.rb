@@ -1,28 +1,64 @@
 class Mastermind
   def initialize
     @board = Board.new
+    @codebreaker = false
   end
 
   def play
+    # Determine if user will play as the codemaker or codebreaker
+    @codebreaker = choose_role
+
     welcome_message
 
+    @board.create_code if not @codebreaker
+
     12.times do |i|
-      begin
-        if @board.check_guess(guess(i + 1))
-          puts "Congratulations! You've cracked the code and mastered the codemaker!!!"
+      puts 
+      puts "Round #{i + 1}"
+      puts "*" * "Round #{i + 1}".length
+      if @codebreaker
+        # Begin the guessing if the user is the codebreaker
+        begin
+          if @board.check_guess(guess)
+            puts "Congratulations! You've cracked the code and mastered the codemaker!!!"
+            puts
+            break
+          end
+        rescue InputError
+          puts
+          puts "*** Invalid guess! Please enter four colors from the given options separated by spaces. ***"
+          redo
+        rescue Interrupt
+          puts
+          puts "Thanks for playing! See you next time!"
           puts
           break
         end
-      rescue GuessError
-        puts
-        puts "*** Invalid guess! Please enter four colors from the given options separated by spaces. ***"
-        redo
-      rescue Interrupt
-        puts
-        puts "Thanks for playing! See you next time!"
-        puts
-        break
+      else
+        if @board.check_guess(computer_guess)
+          puts "The computer has broken your code... You lose!"
+          puts
+          break
+        end
       end
+    end
+  end
+
+  def choose_role
+    begin
+      print "Would you like to play as the codemaker (1) or the codebreaker (2): "
+      choice = gets.chomp
+      case choice.to_i
+      when 1
+        return false
+      when 2
+        return true
+      else
+        raise InputError
+      end
+    rescue InputError
+      puts "Please enter either 1 or 2."
+      retry
     end
   end
 
@@ -30,43 +66,43 @@ class Mastermind
     puts "*-------------------------------------------------*"
     puts "| Welcome to Mastermind - the code-breaking game! |"
     puts "|                                                 |"
-    puts "|  A secret code consisting of a pattern of four  |"
-    puts "|   colors has been selected. You will have 12    |"
-    puts "|   rounds to try to correctly guess the code.    |"
-    puts "|  Following each round of guessing you will be   |"
-    puts "|     awarded anywhere from 0 to 4 key pegs.      |"
-    puts "|  A black key peg means a part of your guess is  |"
-    puts "|   correct in both color and position, while a   |"
-    puts "| white key peg indicates you've guessed a color  |"
-    puts "|      correctly but in the wrong position.       |"
-    puts "|                  Good luck!                     |"
+    if @codebreaker
+      puts "|  A secret code consisting of a pattern of four  |"
+      puts "|   colors has been selected. You will have 12    |"
+      puts "|   rounds to try to correctly guess the code.    |"
+      puts "|  Following each round of guessing you will be   |"
+      puts "|     awarded anywhere from 0 to 4 key pegs.      |"
+      puts "|  A black key peg means a part of your guess is  |"
+      puts "|   correct in both color and position, while a   |"
+      puts "| white key peg indicates you've guessed a color  |"
+      puts "|      correctly but in the wrong position.       |"
+      puts "|                  Good luck!                     |"
+    else
+      puts "|  You are the codemaker! It is your job to craft |"
+      puts "| a tricky pattern of colors to try to make it as |"
+      puts "| hard as possible for the computer to break your |"
+      puts "|                code. Good luck!                 |"
+    end
     puts "*-------------------------------------------------*"
   end
 
-  def guess(round)
-    puts 
-    puts "Round #{round}"
-    puts "*" * "Round #{round}".length
+  def guess()
     puts "Please guess the code by entering four colors separated by spaces"
     puts "(red, orange, yellow, green, blue, purple):"
-    guess = validate_guess(gets.chomp.split().map { |color| color.downcase.to_sym })
+    guess = @board.validate_input(gets.chomp.split().map { |color| color.downcase.to_sym })
     puts
     guess
   end
 
-  def validate_guess(guess)
-    if guess.length != 4
-      raise GuessError
-    end
-    guess.each do |color|
-      if Board::COLORS.include? color == false
-        raise GuessError
-      end
-    end
+  def computer_guess
+    guess = [Board::COLORS.sample, Board::COLORS.sample, Board::COLORS.sample, Board::COLORS.sample]
+    puts "The computer has guessed #{guess.map { |color| color.to_s }}"
     guess
   end
 
   class Board
+    attr_reader :key_pegs
+
     COLORS = [:red, :orange, :yellow, :green, :blue, :purple]
 
     def initialize
@@ -107,9 +143,32 @@ class Mastermind
 
       false
     end
+
+    def create_code
+      begin
+        puts "Please create the code by entering four colors separated by spaces"
+        puts "(red, orange, yellow, green, blue, purple):"
+        @secret_code = validate_input(gets.chomp.split().map { |color| color.downcase.to_sym })
+      rescue InputError
+        puts "*** Invalid input! Please try again. ***"
+        retry
+      end
+    end
+
+    def validate_input(guess)
+      if guess.length != 4
+        raise InputError
+      end
+      guess.each do |color|
+        if COLORS.include? color == false
+          raise InputError
+        end
+      end
+      guess
+    end
   end
 
-  class GuessError < StandardError; end
+  class InputError < StandardError; end
 end
 
 game = Mastermind.new
