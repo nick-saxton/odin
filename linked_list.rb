@@ -66,7 +66,7 @@ class LinkedList
     def insert_at node, index
         # Immediately throw an exception if the given index
         # is out of bounds
-        if index > @size
+        if index > @size or index < 0
             throw IndexError
         end
 
@@ -106,7 +106,6 @@ class LinkedList
         if @head == @tail
             @head = nil
             @tail = nil
-            @size = 0
         else
             current_node = @head
             while current_node.next_node != @tail
@@ -115,6 +114,8 @@ class LinkedList
             @tail = current_node
             @tail.next_node = nil
         end
+
+        @size -= 1
     end
 
     def prepend node
@@ -127,6 +128,38 @@ class LinkedList
         end
 
         @size += 1
+    end
+
+    def remove_at index
+        # Immediately throw an exception if the given index
+        # is out of bounds
+        if index >= @size or index < 0
+            throw IndexError
+        end
+
+        # Set the head and tail to nil
+        # if there's only one element to remove
+        if @size == 1
+            @head = nil
+            @tail = nil
+        elsif index == 0
+            # Remove the head node from the list
+            @head = @head.next_node
+        else
+            current_node = @head
+            next_index = 1
+            while !current_node.next_node.nil?
+                if next_index == index
+                    current_node.next_node = current_node.next_node.next_node
+                    break
+                else
+                    next_index += 1
+                    current_node = current_node.next_node
+                end
+            end
+        end
+
+        @size -= 1
     end
 
     def to_s
@@ -210,10 +243,32 @@ puts "Inserting at index 0"
 list.insert_at(Node.new(0), 0)
 puts "List: #{list}"
 
+puts "List size: #{list.size}"
+
 puts "Inserting at index #{list.size}"
 list.insert_at(Node.new(99), list.size)
 puts "List: #{list}"
 
+puts "List size: #{list.size}"
+
 puts "Inserting at index 4"
 list.insert_at(Node.new(23), 4)
+puts "List: #{list}"
+
+puts "List size: #{list.size}"
+
+puts "Removing at index 4"
+list.remove_at(4)
+puts "List: #{list}"
+
+puts "List size: #{list.size}"
+
+puts "Removing at index 0"
+list.remove_at(0)
+puts "List: #{list}"
+
+puts "List size: #{list.size}"
+
+puts "Removing at index #{list.size - 1}"
+list.remove_at(list.size - 1)
 puts "List: #{list}"
