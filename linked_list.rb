@@ -63,6 +63,45 @@ class LinkedList
         nil
     end
 
+    def insert_at node, index
+        # Immediately throw an exception if the given index
+        # is out of bounds
+        if index > @size
+            throw IndexError
+        end
+
+        if @size == 0
+            # Set the new node as both the head and the tail
+            # if the list is empty
+            @head = node
+            @tail = node
+        elsif index == 0
+            # Insert as the new head
+            node.next_node = @head
+            @head = node
+        elsif index == @size
+            # Insert as the new tail
+            @tail.next_node = node
+            @tail = node
+        else
+            # Insert somewhere in the middle of the list
+            current_node = @head
+            next_index = 1
+            while !current_node.next_node.nil?
+                if next_index == index
+                    node.next_node = current_node.next_node
+                    current_node.next_node = node
+                    break
+                else
+                    next_index += 1
+                    current_node = current_node.next_node
+                end
+            end
+        end
+
+        @size += 1
+    end
+
     def pop
         if @head == @tail
             @head = nil
@@ -166,3 +205,15 @@ puts "Does the list contain 3? #{list.contains?(3)}"
 
 puts "Index of 2: #{list.find(2)}"
 puts "Index of 3? #{list.find(3)}"
+
+puts "Inserting at index 0"
+list.insert_at(Node.new(0), 0)
+puts "List: #{list}"
+
+puts "Inserting at index #{list.size}"
+list.insert_at(Node.new(99), list.size)
+puts "List: #{list}"
+
+puts "Inserting at index 4"
+list.insert_at(Node.new(23), 4)
+puts "List: #{list}"
