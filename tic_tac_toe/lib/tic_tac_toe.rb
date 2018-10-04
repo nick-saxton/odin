@@ -32,8 +32,8 @@ class Game
       # Get user input and then mark the indicated spot
       # If successful, move to the next turn
       begin
-        space_to_mark = get_input()
-        current_player.mark(@grid, space_to_mark)
+        row, column = get_input()
+        current_player.mark(@grid, row, column)
       rescue ArgumentError
         puts
         puts "*** Invalid input! Please enter a column (A-C) immediately followed by a row (1-3). ***"
@@ -61,14 +61,22 @@ class Game
 
     space_to_mark = gets.chomp.upcase()
 
+    validate_input(space_to_mark)
+    convert_input(space_to_mark)
+  end
+
+  def validate_input input
     # Throw an error if the input is bad
-    raise ArgumentError if /^[A-C][1-3]$/.match(space_to_mark).nil?
+    raise ArgumentError if /^[A-C][1-3]$/.match(input).nil?
+  end
 
-    space_to_mark = space_to_mark.split("")
-    column = COLUMN_CONVERSION[space_to_mark[0].to_sym]
-    row = space_to_mark[1].to_i - 1
+  def convert_input input
+    split_input = input.split("")
 
-    {row: row, column: column}
+    row = split_input[1].to_i - 1
+    column = COLUMN_CONVERSION[split_input[0].to_sym]
+
+    return row, column
   end
 
   class Grid
@@ -90,10 +98,12 @@ class Game
       puts
     end
 
-    def mark(marker, space_to_mark)
-      raise IndexError if @grid[space_to_mark[:row]][space_to_mark[:column]].strip.length != 0
+    def mark(row, column, marker)
+      raise IndexError if row < 0 or row > 2
+      raise IndexError if column < 0 or column > 2
+      raise IndexError if @grid[row][column].strip.length != 0
 
-      @grid[space_to_mark[:row]][space_to_mark[:column]] = marker
+      @grid[row][column] = marker
     end
 
     def win?(marker)
@@ -103,9 +113,6 @@ class Game
          (@grid[0][2] == marker and @grid[1][2] == marker and @grid[2][2] == marker) or
          (@grid[0][0] == marker and @grid[1][1] == marker and @grid[2][2] == marker) or
          (@grid[0][2] == marker and @grid[1][1] == marker and @grid[2][0] == marker)
-        puts
-        puts "*** #{marker} wins!!! ***"
-        puts
         return true
       end
       false
@@ -117,8 +124,8 @@ class Game
       @marker = marker
     end
 
-    def mark(grid, space_to_mark)
-      grid.mark(@marker, space_to_mark)
+    def mark(grid, row, column)
+      grid.mark(row, column, @marker)
     end
 
     def win?(grid)
@@ -128,4 +135,4 @@ class Game
 end
 
 game = Game.new
-game.start()
+game.start
